@@ -1,0 +1,48 @@
+28.11.23: 
+  Neuaufsetzen des Projekts. 
+  Schritt 1: Neue Struktur angelegt
+  Schritt 2: Leere Datenbank aufsetzen
+  Schritt 3: Skript für helper functions aufsetzen (Standardisierung Datum etc.)
+  Schritt 3: Aktuelle Umsatzdetail herunterladen, einlesen und Daten
+             aufbereiten (FLAG: An Mechanismus denken um mit neuen Daten zu füttern 
+             ohne alles neu herunterladen zu müssen!)
+            
+  PROBLEM: xlsx aus QS lässt sich nicht lesen
+  
+29.11.23:
+  Schritt 1: monatlichen Umsatz Zeitreihe berechnet
+  Schritt 2: EDA begonnen
+  Anmerkungen: 
+    Feature Engineering: Arbeitstage pro Monat berechnen, 
+                         Ferien erfassen
+  
+30.11.23: 
+  Idee: Für DACH Raum jeweils Pakete schreiben für Arbeitstage und Schulferien
+        Ist in Arbeit.
+      
+05.12.23: 
+  Schritt 1: Auftragseingangsdaten herunterladen und einpflegen.
+  Schritt 2: Angebote herunterladen und einpflegen
+  
+12.12.2023
+  - historische und aktuelle Werte für offene Angebote berechnen
+  
+13.12.2023
+  - Funktionen zur Evaluierung von Variablen 
+  - Funktionen um rollierende Forecasts zu berechnen
+  
+  TO DO: Als nächstes ifo und Baubranchen Daten systematisch ziehen und 
+         aufbereiten
+         
+15.12.2023
+  - ifo funktioniert nicht, Bau schon.
+  
+  TO DO: Als nächstes Pakete für Arbeitstage und Ferienperioden fertig schreiben.
+  
+18.12.2023
+  - Package für Arbeitstage fertig
+  - Arbeitstage in Schätzung eingebaut
+  - TO DO: Funktion für Best Subset Selection bauen
+  
+
+        
