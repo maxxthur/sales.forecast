@@ -17,15 +17,30 @@
 #' @export
 #'
 #' @examples
-prepare_data <- function(data = available_data, h = 6, h.test = 12, response = "Umsatz",
-                         reference = NULL, k = 24, no_lags = c("holidays", "workdays"), baseline_model = "workdays") {
-
-  if(!response %in% names(data)) stop("'reponse' not found in names of data list.")
+prepare_data <- function(
+  data = available_data,
+  h = 6,
+  h.test = 12,
+  response = "Umsatz",
+  reference = NULL,
+  k = 24,
+  no_lags = c("holidays", "workdays"),
+  baseline_model = "workdays"
+) {
+  if (!response %in% names(data)) {
+    stop("'reponse' not found in names of data list.")
+  }
 
   # identify date variables and convert to date, rename to "date"
   data <- lapply(data, function(d) {
     d[] <- lapply(d[], function(y) {
-      if(lubridate::is.Date(y)) y else if(is_ymd(y)) lubridate::ymd(y) else y
+      if (lubridate::is.Date(y)) {
+        y
+      } else if (is_ymd(y)) {
+        lubridate::ymd(y)
+      } else {
+        y
+      }
     })
     d
   })
@@ -36,33 +51,52 @@ prepare_data <- function(data = available_data, h = 6, h.test = 12, response = "
   })
 
   # check if there is a date available for all provided data, throw error if not
-  if(!all(
-    sapply(data, function(d)
-    "Date" %in% sapply(d, class)
+  if (
+    !all(
+      sapply(data, function(d) {
+        "Date" %in% sapply(d, class)
+      })
     )
-  )) stop("Not all provided data.frames have a column of type 'Date' or a column that can be coerced to 'Date'.")
+  ) {
+    stop(
+      "Not all provided data.frames have a column of type 'Date' or a column that can be coerced to 'Date'."
+    )
+  }
 
   # get min date as the minimum date in the df holding the response - k months to not lose info
-  min_date <- min(c(data[[response]][which(col_class(data[[response]]) == "Date")])[[1]]) - months(k)
+  min_date <- min(c(data[[response]][which(
+    col_class(data[[response]]) == "Date"
+  )])[[1]]) -
+    months(k)
 
   # get max date as the overall max_date to not loose any information
-  max_date <- as.Date(max(sapply(data, function(d) {max(c(d[which(col_class(d) == "Date")])[[1]])})), origin = "1970-01-01")
+  max_date <- as.Date(
+    max(sapply(data, function(d) {
+      max(c(d[which(col_class(d) == "Date")])[[1]])
+    })),
+    origin = "1970-01-01"
+  )
 
   # make initial data.frame
   df <- data.frame(date = seq(min_date, max_date, "months"))
 
   # merge all other sequentially
-  for(i in 1:length(data)) df <- merge(df, data[[i]], by = "date", all.x = T)
+  for (i in 1:length(data)) {
+    df <- merge(df, data[[i]], by = "date", all.x = T)
+  }
 
   # clean names
   df <- janitor::clean_names(df)
 
   # identify completely empty columns
   empty_cols <- sapply(df, function(d) all(is.na(d)))
-  warning(paste("Removed empty columns:\n", paste(names(empty_cols[empty_cols]), collapse = ",\n")))
+  warning(paste(
+    "Removed empty columns:\n",
+    paste(names(empty_cols[empty_cols]), collapse = ",\n")
+  ))
 
   # remove empty columns
-  df <- df[, -which(empty_cols)]
+  df <- df |> dplyr::select(!names(empty_cols)[empty_cols])
 
   # amend response and reference
   response <- gsub(pattern = " ", replacement = "_", x = tolower(response))
@@ -70,26 +104,40 @@ prepare_data <- function(data = available_data, h = 6, h.test = 12, response = "
   no_lags <- gsub(pattern = " ", replacement = "_", x = tolower(no_lags))
 
   # make lags of each variable that is not response, reference or date
-  lags <- make_lags(df, exclude = c("date", response, reference, no_lags), k = k)
+  lags <- make_lags(
+    df,
+    exclude = c("date", response, reference, no_lags),
+    k = k
+  )
+
   no_lag <- vector(mode = "list", length = length(no_lags))
-  for(i in 1:length(no_lags)) {no_lag[[i]] <- df[, c("date", no_lags[i])]; names(no_lag[[i]]) <- c("date", "lag_0")}
+  for (i in 1:length(no_lags)) {
+    no_lag[[i]] <- df |> dplyr::select(c("date", !!!no_lags[i]))
+    names(no_lag[[i]]) <- c("date", "lag_0")
+  }
   names(no_lag) <- no_lags
   lags <- append(lags, no_lag)
 
   # calculate correlation coefficient for each variable
   corr <- lapply(lags, function(l) {
-    cor(df$umsatz, l[,-which(names(l) == "date")], use = "pairwise.complete.obs")
+    cor(
+      df$umsatz,
+      l[, -which(names(l) == "date")],
+      use = "pairwise.complete.obs"
+    )
   })
 
   # Output
-  output <- business.data(response = response,
-       reference = reference,
-       data = df,
-       lagged_predictors = lags,
-       correlations = corr,
-       h.test = h.test,
-       h = h,
-       baseline_model = baseline_model)
+  output <- business.data(
+    response = response,
+    reference = reference,
+    data = df,
+    lagged_predictors = lags,
+    correlations = corr,
+    h.test = h.test,
+    h = h,
+    baseline_model = baseline_model
+  )
 
   output
 }
@@ -97,16 +145,31 @@ prepare_data <- function(data = available_data, h = 6, h.test = 12, response = "
 # Create business.data object
 #' @export business.data
 #' @exportClass business.data
-business.data <- setClass("business.data",
-                          slots = c(response = "character",
-                                    reference = "character",
-                                    data = "data.frame",
-                                    lagged_predictors = "list",
-                                    correlations = "list",
-                                    h.test = "numeric",
-                                    h = "numeric",
-                                    baseline_model = "character"))
+business.data <- setClass(
+  "business.data",
+  slots = c(
+    response = "character",
+    reference = "character",
+    data = "data.frame",
+    lagged_predictors = "list",
+    correlations = "list",
+    h.test = "numeric",
+    h = "numeric",
+    baseline_model = "character"
+  )
+)
 
-
-
-
+if (F) {
+  devtools::load_all()
+  load("inst/debug_data.RData")
+  prepare_data(
+    data = data,
+    h = 6,
+    h.test = 12,
+    response = "umsatz",
+    reference = "budget",
+    k = 24,
+    no_lags = c("workdays", "holiday"),
+    baseline_model = c("workdays_lag_0")
+  )
+}
