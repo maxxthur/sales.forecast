@@ -39,5 +39,6 @@ load("just_for_dev/model.RData")
 
 # Forecast für nächste 6 Monate berechnen
 forecast <- predict(modell)
+
 sales.forecast::plot_fc(forecast)
 sales.forecast:::plot_train(modell)

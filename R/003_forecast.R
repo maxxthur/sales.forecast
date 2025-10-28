@@ -94,7 +94,7 @@ prepare_data_fc <- function(response = models@data@response, model = models@exte
 #' @examples
 fc <- function(data = extended_data[[1]], response = object@data@response) {
   not_xreg <- which(names(data$estimation) %in% c("date", response))
-  m <- smooth::es(dplyr::pull(data$estimation, response), xreg = data$estimation %>% dplyr::select(-all_of(not_xreg)), regressors = "use")
+  m <- smooth::es(dplyr::pull(data$estimation, response), xreg = data$estimation %>% dplyr::select(-all_of(not_xreg)) |> dplyr::mutate(constant = 1) |> as.matrix(), regressors = "use")
   fc <- forecast::forecast(object = m, h = nrow(data$prediction), newdata = data$prediction)
   output <- data.frame(date = data$prediction$date, forecast = fc$mean)
   return(output)
