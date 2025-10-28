@@ -394,7 +394,7 @@ make_train_test <- function(df, h.test, h) {
 make_test_fc <- function(traintest, response, xreg, exclude_var) {
   results <- list()
   for(i in 1:length(traintest$train)) {
-    m <- smooth::es(dplyr::pull(traintest$train[[i]], response), xreg = traintest$train[[i]] %>% dplyr::select(all_of(xreg)), regressors = "use")
+    m <- smooth::es(dplyr::pull(traintest$train[[i]], response), xreg = traintest$train[[i]] %>% dplyr::select(all_of(xreg)) |> dplyr::mutate(constant = 1) |> as.matrix(), regressors = "use")
     fc <- forecast::forecast(object = m, h = nrow(traintest$test[[i]]), newdata = traintest$test[[i]])
     actual <- dplyr::pull(traintest$test[[i]], response)
     results[[i]] <- data.frame(date = traintest$test[[i]]$date, fc = fc$mean, actual = actual, error = fc$mean - actual, win = i, model = paste(xreg, collapse = ", "))

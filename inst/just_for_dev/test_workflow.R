@@ -1,6 +1,6 @@
 devtools::load_all()
 library(tidyverse)
-load("just_for_dev/debug_data.RData")
+load("inst/debug_data.RData")
 
 business_data <- prepare_data(data = data, h = 6, h.test = 12, response = "umsatz",
                               reference = "budget", k = 24, no_lags = c("workdays", "holiday"), baseline_model = c("workdays_lag_0"))
